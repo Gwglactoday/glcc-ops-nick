@@ -122,3 +122,119 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0
 .btn { background: var(--amber); color: #1a1205; border: none; border-radius: 9px; padding: 9px 16px; font-size: 14px; font-weight: 600; cursor: pointer; }
 .btn:disabled { opacity: 0.6; cursor: default; }
 .brief { white-space: pre-wrap; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin: 14px 0 0; font-size: 13px; line-height: 1.6; color: var(--text); font-family: inherit; }
+
+/* ============================================================
+   MOBILE — everything below only applies at <=768px. Desktop is
+   untouched. Mobile-first polish: drawer nav, stacked table cards,
+   2-up stat grid, safe areas, >=16px text, >=44px tap targets.
+   ============================================================ */
+
+/* These mobile-only chrome pieces are hidden on desktop. */
+.topbar, .scrim, .burger, .side-close { display: none; }
+
+@media (max-width: 768px) {
+  /* No horizontal page scroll, ever. */
+  html, body { overflow-x: hidden; }
+  body.drawer-open { overflow: hidden; }
+
+  /* Stack instead of the desktop side-by-side flex. */
+  .app { display: block; }
+
+  /* --- Fixed top bar with hamburger --- */
+  .topbar {
+    display: flex; align-items: center; gap: 12px;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    height: calc(54px + env(safe-area-inset-top));
+    padding: env(safe-area-inset-top) 14px 0;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+  }
+  .burger {
+    display: grid; place-items: center;
+    width: 44px; height: 44px; margin-left: -8px;
+    background: none; border: none; color: var(--text);
+    font-size: 22px; cursor: pointer; border-radius: 8px;
+  }
+  .brand-top { margin-bottom: 0; }
+
+  /* --- Drawer (the same aside, slid off-canvas) --- */
+  .side {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 60;
+    width: min(82vw, 300px);
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    padding: calc(16px + env(safe-area-inset-top)) 18px calc(16px + env(safe-area-inset-bottom));
+    padding-left: calc(18px + env(safe-area-inset-left));
+  }
+  .side.open { transform: translateX(0); box-shadow: 0 0 40px rgba(0,0,0,0.5); }
+  .side-close {
+    display: block; position: absolute; top: calc(8px + env(safe-area-inset-top)); right: 10px;
+    width: 40px; height: 40px;
+    background: none; border: none; color: var(--muted);
+    font-size: 26px; line-height: 1; cursor: pointer;
+  }
+
+  /* --- Tap-outside scrim --- */
+  .scrim {
+    display: block; position: fixed; inset: 0; z-index: 55;
+    background: rgba(0,0,0,0.5);
+    opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+  }
+  .scrim.show { opacity: 1; pointer-events: auto; }
+
+  /* Bigger nav tap targets + >=16px text. */
+  .nav { gap: 4px; }
+  .nav a { padding: 12px 14px; font-size: 16px; }
+
+  /* --- Main content: clear the top bar, tighter side padding. --- */
+  .main {
+    padding: 18px 16px calc(24px + env(safe-area-inset-bottom));
+    padding-top: calc(54px + env(safe-area-inset-top) + 18px);
+  }
+  .ph { font-size: 20px; }
+  .cap { font-size: 15px; margin-bottom: 18px; }
+
+  /* --- Stat cards: clean 2-up grid. --- */
+  .grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat .v { font-size: 24px; }
+
+  /* --- Tables become stacked cards. thead hidden; each row is a card,
+         each cell shows its column label via data-label. --- */
+  .tbl { border: none; background: transparent; border-radius: 0; }
+  .tbl thead { display: none; }
+  .tbl tr {
+    display: block;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 4px 2px; margin-bottom: 12px;
+  }
+  .tbl td {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+    padding: 9px 14px; border-bottom: 1px solid var(--border);
+    font-size: 16px; text-align: right;
+  }
+  .tbl tr td:last-child { border-bottom: none; }
+  .tbl td::before {
+    content: attr(data-label);
+    color: var(--muted); font-size: 13px; font-weight: 500;
+    text-align: left; flex: 0 0 auto;
+  }
+  /* First cell = the card's title row: full-width heading, no label. */
+  .tbl td:first-child {
+    justify-content: flex-start; text-align: left;
+    font-size: 17px; font-weight: 600;
+    padding-top: 12px;
+  }
+  .tbl td:first-child::before { display: none; }
+
+  /* --- Pipeline board: stack stages vertically. --- */
+  .cols { flex-direction: column; gap: 18px; }
+  .col h3 { font-size: 14px; }
+  .kc .t { font-size: 15px; }
+  .kc .s { font-size: 13px; }
+
+  /* --- Misc readability / no-overflow. --- */
+  .empty, .banner { font-size: 15px; }
+  .office { height: 300px; }
+  .agent-card { max-width: 100%; }
+  .ac-role, .brief { font-size: 14px; }
+  .btn { padding: 12px 18px; min-height: 44px; }
+}
