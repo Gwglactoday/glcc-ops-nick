@@ -48,4 +48,7 @@ export const DEAL_CATS = ['lead', 'invoice']            // Money + Pipeline + Da
 export const TASK_CATS = ['task']                       // (kept for reference)
 export const NEW_CATS  = ['project', 'contact', 'content'] // the tabs added at GLCC
 
-export const todayISO = () => new Date().toISOString().slice(0, 10)
+// "Today" in Malaysia time (UTC+8), not UTC — otherwise from midnight to 8am MYT
+// the UTC date is still "yesterday", and "due today / overdue" comes out a day off.
+// en-CA formats as YYYY-MM-DD, matching the due_date strings we compare against.
+export const todayISO = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' })
