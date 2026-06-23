@@ -1,63 +1,58 @@
 -- ============================================================
--- Marketing · 广告日报 Ad Daily
--- 一行 = 某公司某品牌某天的投放数据。company + brand + date 维度。
--- 数据由 Google Sheet（每个自有品牌一张）每天同步 2 次进来；这里先放
--- 一份样本（Nick 的 2026-06 报表）让页面能显示。Run 一次即可，可重跑。
+-- Marketing · 广告日报 Ad Daily —— 新格式（E-com Report）为标准
+-- 一行 = 某公司某品牌某天。新格式品牌(Fitmode)按多平台明细存；
+-- 旧 18 栏品牌(LactoDay 等)经「转换器」映射进同一张表的共同字段。
+-- source_format 记来源；details(jsonb) 存各格式原始额外字段。
+-- 重建：旧表结构不同，先 drop 再建。Run 一次即可。
 -- ============================================================
-create table if not exists marketing_ad_daily (
-  id                    bigint generated always as identity primary key,
-  company               text        not null,   -- BM / GWG / GWD
-  brand                 text        not null,   -- Fitmode / Slimfinity / LactoDay / BetterDay / Heragen ...
-  date                  date        not null,
-  shopee_cpas_ads_cost  numeric     not null default 0,
-  lazada_cpas_ads_cost  numeric     not null default 0,
-  awa_ads_cost          numeric     not null default 0,
-  lead_to_pm_ad_cost    numeric     not null default 0,
-  new_pm                integer     not null default 0,
-  pmed                  integer     not null default 0,
-  total_comments        integer     not null default 0,
-  new_order             integer     not null default 0,
-  repeat_order          integer     not null default 0,
-  product_sold          integer     not null default 0,
-  fb_new_sales          numeric     not null default 0,
-  fb_repeat_sales       numeric     not null default 0,
-  insta_new_sales       numeric     not null default 0,
-  insta_repeat_sales    numeric     not null default 0,
-  shopee_sales          numeric     not null default 0,
-  lazada_sales          numeric     not null default 0,
-  other_platform_sales  numeric     not null default 0,
-  updated_at            timestamptz not null default now(),
-  unique (brand, date)              -- 同步按 (brand,date) upsert，不重复
+drop table if exists marketing_ad_daily;
+create table marketing_ad_daily (
+  id              bigint generated always as identity primary key,
+  company         text not null,
+  brand           text not null,
+  date            date not null,
+  source_format   text not null default 'new',          -- 'new' | 'old'
+  -- 花费（各平台）
+  meta_spend      numeric not null default 0,
+  shopee_cpas     numeric not null default 0,
+  shopee_ads      numeric not null default 0,
+  lazada_cpas     numeric not null default 0,
+  lazada_ads      numeric not null default 0,
+  tiktok_spend    numeric not null default 0,
+  total_ad_spend  numeric not null default 0,
+  -- 销售（各平台）
+  fb_sales        numeric not null default 0,
+  ig_sales        numeric not null default 0,
+  shopee_sales    numeric not null default 0,            -- = Shopee Total
+  lazada_sales    numeric not null default 0,
+  tiktok_sales    numeric not null default 0,
+  other_sales     numeric not null default 0,
+  total_sales     numeric not null default 0,
+  -- 订单 / 件数 / 私讯
+  total_orders    integer not null default 0,
+  total_units     integer not null default 0,
+  new_msg         integer not null default 0,
+  total_msg       integer not null default 0,
+  details         jsonb   not null default '{}'::jsonb,  -- 原始额外字段（旧:awa/pmed/comments；新:net/cumul 等）
+  updated_at      timestamptz not null default now(),
+  unique (brand, date)
 );
+alter table marketing_ad_daily enable row level security;
 
-alter table marketing_ad_daily enable row level security; -- server 用 service_role 读写，绕过 RLS
+-- 样本① Fitmode（新格式，真实 6 月）
+insert into marketing_ad_daily (company,brand,date,source_format,meta_spend,shopee_ads,total_ad_spend,shopee_sales,total_sales,total_orders,total_units) values
+('BM','Fitmode','2026-06-14','new',0,192,192,1452,1452,12,12),
+('BM','Fitmode','2026-06-15','new',0,192,192,1170,1170,5,5),
+('BM','Fitmode','2026-06-17','new',0,192,192,823,823,4,4),
+('BM','Fitmode','2026-06-18','new',0,192,192,906,906,6,6),
+('BM','Fitmode','2026-06-19','new',43,191,234,566,566,3,3),
+('BM','Fitmode','2026-06-21','new',111,180,292,406,406,3,3);
 
--- 样本数据（来自 Nick 2026-06 广告日报截图；品牌暂标 LactoDay/GWG，接同步后以真实为准）
--- on conflict 不动，便于安全重跑。
-insert into marketing_ad_daily
-  (company, brand, date, shopee_cpas_ads_cost, lazada_cpas_ads_cost, awa_ads_cost, lead_to_pm_ad_cost,
-   new_pm, pmed, total_comments, new_order, repeat_order, product_sold,
-   fb_new_sales, fb_repeat_sales, insta_new_sales, insta_repeat_sales, shopee_sales, lazada_sales, other_platform_sales)
-values
-  ('GWG','LactoDay','2026-06-01',29.02,32.29,0,126.70, 8, 8,0, 2,0, 1,   0,  0,0,0, 138.00,   0,0),
-  ('GWG','LactoDay','2026-06-02',26.29,25.47,17.89,106.27, 6, 6,1, 0,0, 0,   0,  0,0,0,  69.00,   0,0),
-  ('GWG','LactoDay','2026-06-03',19.60,26.96,33.78,100.13, 9, 7,0, 1,0, 2,   0,  0,0,0,   0,      0,0),
-  ('GWG','LactoDay','2026-06-04',28.04,38.92,28.04,102.12,13,11,0, 1,0, 2,   0,  0,0,0,   0,      0,0),
-  ('GWG','LactoDay','2026-06-05',22.28,38.15,26.15, 93.76, 5, 5,0, 1,0, 2,   0,  0,0,0, 237.00,   0,0),
-  ('GWG','LactoDay','2026-06-06',16.62,28.11,33.78, 71.65, 3, 3,0, 5,0,35,   0,  0,0,0, 247.50,5103.10,0),
-  ('GWG','LactoDay','2026-06-07',25.10,34.77,21.95,131.32, 7, 6,0, 0,0, 0,   0,  0,0,0,   0,      0,0),
-  ('GWG','LactoDay','2026-06-08',25.63,28.70,22.27,145.36, 5, 3,0, 1,0, 3, 447.00,0,0,0,  0,      0,0),
-  ('GWG','LactoDay','2026-06-09',27.26,16.07,20.25,144.45,14,12,0, 1,0, 2, 298.00,0,0,0,  0,      0,0),
-  ('GWG','LactoDay','2026-06-10',23.92,31.06,19.61,136.68, 9, 9,0, 8,0,15, 745.00,0,0,0, 941.10,329.60,0),
-  ('GWG','LactoDay','2026-06-11',19.33,31.78,18.55,106.85, 5, 5,0, 0,1, 2,   0,298.00,0,0,  0,      0,0),
-  ('GWG','LactoDay','2026-06-12',26.96,30.82,20.02, 89.27, 9, 5,0, 0,0, 0,   0,  0,0,0,   0,      0,0),
-  ('GWG','LactoDay','2026-06-13',26.45,35.19,17.35, 67.62, 1, 1,1, 1,0, 2, 298.00,0,0,0,  0,      0,0),
-  ('GWG','LactoDay','2026-06-14',33.53,28.40,22.13,110.37, 3, 2,0, 3,0, 8,   0,  0,0,0,1008.00,   0,0),
-  ('GWG','LactoDay','2026-06-15',24.66,35.00,20.17,118.13,10,10,0, 5,0, 7,   0,  0,0,0,1009.80,   0,0),
-  ('GWG','LactoDay','2026-06-16',24.44,35.12,20.19,119.15,10, 7,0, 0,0, 0,   0,  0,0,0,   0,      0,0),
-  ('GWG','LactoDay','2026-06-17',19.87,31.57,19.81,107.33, 2, 2,0, 1,0, 2,   0,  0,0,0, 219.00,   0,0),
-  ('GWG','LactoDay','2026-06-18',23.45,31.29,20.17,167.70, 9, 7,0, 0,0, 0,   0,  0,0,0,   0,      0,0),
-  ('GWG','LactoDay','2026-06-19',28.78,26.59,3.99,148.30,12,10,0, 0,0, 0,   0,  0,0,0,   0,      0,0),
-  ('GWG','LactoDay','2026-06-20',0,21.68,0,124.82, 9, 7,0, 0,0, 0,   0,  0,0,0,   0,      0,0),
-  ('GWG','LactoDay','2026-06-21',31.39,33.43,0,153.71, 2, 1,0, 3,0,10,   0,  0,0,0,1079.00,338.00,0)
-on conflict (brand, date) do nothing;
+-- 样本② LactoDay（旧格式 → 转换器映射，真实 6 月代表性日子）
+insert into marketing_ad_daily (company,brand,date,source_format,meta_spend,shopee_cpas,lazada_cpas,total_ad_spend,fb_sales,shopee_sales,lazada_sales,total_sales,total_orders,total_units,new_msg,total_msg,details) values
+('GWG','LactoDay','2026-06-01','old',126.70,29.02,32.29,188.01,0,138.00,0,138.00,2,1,8,8,'{"awa":0}'::jsonb),
+('GWG','LactoDay','2026-06-06','old',71.65,16.62,28.11,150.16,0,247.50,5103.10,5350.60,5,35,3,3,'{"awa":33.78}'::jsonb),
+('GWG','LactoDay','2026-06-10','old',136.68,23.92,31.06,211.27,745.00,941.10,329.60,2015.70,8,15,9,9,'{"awa":19.61}'::jsonb),
+('GWG','LactoDay','2026-06-14','old',110.37,33.53,28.40,194.43,0,1008.00,0,1008.00,3,8,3,3,'{"awa":22.13}'::jsonb),
+('GWG','LactoDay','2026-06-15','old',118.13,24.66,35.00,197.96,0,1009.80,0,1009.80,5,7,10,10,'{"awa":20.17}'::jsonb),
+('GWG','LactoDay','2026-06-21','old',153.71,31.39,33.43,218.53,0,1079.00,338.00,1417.00,3,10,2,2,'{"awa":0}'::jsonb);

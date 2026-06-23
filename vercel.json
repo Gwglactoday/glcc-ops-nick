@@ -1,6 +1,5 @@
 {
   "crons": [
-    { "path": "/api/morning", "schedule": "0 0 * * *" },
-    { "path": "/api/jarvis-oyen", "schedule": "0 9 * * *" }
+    { "path": "/api/sync-sheets", "schedule": "30 10 * * *" }
   ]
 }

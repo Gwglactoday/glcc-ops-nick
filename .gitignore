@@ -11,8 +11,16 @@ next-env.d.ts
 *.key
 *.bak
 *secret*
-# but DO keep the example
+# Google service-account JSON keys (never commit)
+*.json
+glcc-sheets-sync-*.json
+# but DO keep the example + project configs
 !.env.example
+!package.json
+!package-lock.json
+!tsconfig.json
+!vercel.json
+!.claude/launch.json
 
 *.tsbuildinfo
 .DS_Store

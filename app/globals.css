@@ -27,6 +27,22 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0
 .nav a { display: block; padding: 9px 11px; border-radius: 8px; color: var(--muted); text-decoration: none; font-size: 14px; }
 .nav a:hover { background: var(--surface2); color: var(--text); }
 .nav a.active { background: var(--surface2); color: var(--text); font-weight: 500; }
+/* 部门分组：部门名 + 缩进子页面 */
+.nav-group { display: flex; flex-direction: column; gap: 3px; }
+.nav .group-label { display: flex; align-items: center; gap: 7px; width: 100%; text-align: left; padding: 9px 11px; border-radius: 8px; color: var(--text); text-decoration: none; font-size: 14px; font-weight: 500; background: none; border: none; cursor: pointer; font-family: inherit; }
+.nav .group-label:hover { background: var(--surface2); }
+.nav .group-label.active { background: var(--surface2); }
+.nav .group-label .chev { display: inline-block; font-size: 10px; color: var(--dim); transition: transform 0.15s ease; }
+.nav .group-label .chev.open { transform: rotate(90deg); }
+.nav .sub { display: flex; flex-direction: column; gap: 2px; margin: 1px 0 2px 10px; padding-left: 9px; border-left: 1px solid var(--border); }
+.nav .sub a { padding: 7px 10px; font-size: 13px; }
+.nav .sub .disabled { display: flex; align-items: center; gap: 6px; padding: 7px 10px; font-size: 13px; color: var(--dim); cursor: default; }
+.nav .sub .soon { font-size: 10px; color: var(--dim); border: 1px solid var(--border); border-radius: 6px; padding: 1px 5px; }
+/* 广告日报日期筛选条 */
+.daterow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.datepick { display: flex; align-items: center; gap: 6px; }
+.datepick input[type=date] { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 5px 8px; font-size: 13px; font-family: inherit; }
+.datepick button { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
 .hint { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border); font-size: 12px; color: var(--dim); line-height: 1.5; }
 
 .main { flex: 1; min-width: 0; padding: 30px 34px; }
