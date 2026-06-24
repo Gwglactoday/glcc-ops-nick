@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { listTabTitles, getTabValues } from '@/lib/google-sheets'
+import { readRegistry, type RegRow } from '@/lib/registry'
 
 // ============================================================
 // 广告日报同步：登记表 → 各品牌当月页签 → marketing_ad_daily
@@ -9,9 +10,6 @@ import { listTabTitles, getTabValues } from '@/lib/google-sheets'
 // 而不是用登记表里固定的 gid。新格式(E-com Report)直接映射；旧 18 栏格式
 // 经「转换器」映射进同一张表的共同字段。跳过 TOTAL/Average 等汇总行与未来日期。
 // ============================================================
-
-const REGISTRY_ID =
-  process.env.GOOGLE_SYNC_REGISTRY_ID?.trim() || '1ZfG2NEBTHZTeSMG4-NkJWmMk-9OyKktZGNqTrx09Dts'
 
 const MONTHS_SHORT = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
 const MONTHS_LONG = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
@@ -155,37 +153,6 @@ function parseNew(values: string[][], year: number, month: number, cutoff: strin
   return out
 }
 
-// ---------- 登记表 ----------
-type RegRow = { company: string; brand: string; sheetId: string }
-
-function sheetIdFromUrl(url: string): string {
-  const m = String(url).match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/)
-  return m ? m[1] : ''
-}
-
-async function readAdDailyRegistry(): Promise<RegRow[]> {
-  const titles = await listTabTitles(REGISTRY_ID)
-  const values = await getTabValues(REGISTRY_ID, titles[0])
-  const hi = values.findIndex(r => r.some(c => norm(c).includes('sheet')) && r.some(c => norm(c).includes(norm('数据类型')) || norm(c).includes('type')))
-  const header = values[hi >= 0 ? hi : 0]
-  const ci = {
-    on: findCol(header, '启用'), type: findCol(header, '数据类型'),
-    company: findCol(header, '公司'), brand: findCol(header, '品牌'), link: findCol(header, 'Sheet链接', 'Sheet'),
-  }
-  const rows: RegRow[] = []
-  for (let i = (hi >= 0 ? hi : 0) + 1; i < values.length; i++) {
-    const r = values[i] || []
-    const on = String(r[ci.on] ?? '').trim()
-    const enabled = /✓|✔|yes|true|1|y/i.test(on)
-    if (!enabled) continue
-    if (norm(r[ci.type]) !== norm('ad_daily')) continue
-    const sheetId = sheetIdFromUrl(r[ci.link] ?? '')
-    if (!sheetId) continue
-    rows.push({ company: String(r[ci.company] ?? '').trim(), brand: String(r[ci.brand] ?? '').trim(), sheetId })
-  }
-  return rows
-}
-
 export type SyncResult = { brand: string; company: string; tab?: string; rows: number; months?: number; error?: string }
 
 // 从页签名解析出年月，如 "May 2026" / "April 2026" / "Jun2026" → {y,m}；认不出返回 null。
@@ -218,7 +185,7 @@ async function syncOneMonth(src: RegRow, tab: string, y: number, m: number, cuto
 export async function syncAdDaily(opts: { allMonths?: boolean } = {}): Promise<SyncResult[]> {
   const cutoff = todayMY()
   const [y, m] = cutoff.split('-').map(Number)
-  const reg = await readAdDailyRegistry()
+  const reg = await readRegistry('ad_daily')
   const results: SyncResult[] = []
 
   for (const src of reg) {

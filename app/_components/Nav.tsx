@@ -23,7 +23,7 @@ const TABS: Tab[] = [
     href: '/marketing', label: 'Marketing',
     children: [
       { href: '/marketing/ad-daily', label: '广告日报 Ad Daily', ready: true },
-      { href: '/marketing/group-buy', label: '团购 Group Buy', ready: false },
+      { href: '/marketing/group-buy', label: '团购 Group Buy', ready: true },
       { href: '/marketing/seeding', label: 'KOC / KOL', ready: false },
     ],
   },

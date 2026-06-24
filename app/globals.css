@@ -42,7 +42,12 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0
 .daterow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 4px; }
 .datepick { display: flex; align-items: center; gap: 6px; }
 .datepick input[type=date] { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 5px 8px; font-size: 13px; font-family: inherit; }
+.datepick select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 5px 8px; font-size: 13px; font-family: inherit; }
 .datepick button { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+/* 团购进度小标签 */
+.progs { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+.prog { font-size: 10px; padding: 2px 6px; border-radius: 6px; border: 1px solid var(--border); color: var(--dim); white-space: nowrap; }
+.prog.done { background: rgba(29,158,117,0.18); border-color: transparent; color: #86e0b8; }
 .hint { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border); font-size: 12px; color: var(--dim); line-height: 1.5; }
 
 .main { flex: 1; min-width: 0; padding: 30px 34px; }
